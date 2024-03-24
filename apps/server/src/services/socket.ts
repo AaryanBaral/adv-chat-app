@@ -1,6 +1,8 @@
 import {Server} from "socket.io"
 import Redis from "ioredis";
 import dotenv from "dotenv";
+import prismaClient from "./prisma";
+import { createMesssages } from "./kafka";
 
 dotenv.config();
 
@@ -29,6 +31,7 @@ class SocketService{
             }
         });
         sub.subscribe("MESSAGES");
+
     }
 
     public initListners(){
@@ -45,9 +48,12 @@ class SocketService{
         
         })
 
-        sub.on("message",(channel,message)=>{
+        sub.on("message",async (channel,message)=>{
             if(channel === "MESSAGES") {
                 io.emit("message",message);
+                await createMesssages(message);
+                console.log("Message Produced to Producer");
+                
             }
         })
     }
